@@ -15,23 +15,28 @@ $exist_images = scandir($wall_paper_folder);
 $exist_images = array_diff($exist_images, ['.', '..']);
 
 // 下载图片
-foreach ($images as $item) {
-    $item_url = $item['url'];
-    $image_name = end(explode("/", $item_url));
-    $formatted_name = $item['startdate'] . "_" . $image_name;
-    // 防止重复下载
-    if (in_array($formatted_name, $exist_images)) {
-        continue;
+if ($images) {
+    foreach ($images as $item) {
+        $item_url = $item['url'];
+        if(filter_var($item_url, FILTER_VALIDATE_URL) === false ){
+           continue; 
+        }
+        $image_name = end(explode("/", $item_url));
+        $formatted_name = $item['startdate'] . "_" . $image_name;
+        // 防止重复下载
+        if (in_array($formatted_name, $exist_images)) {
+            continue;
+        }
+
+        ob_start();
+        readfile($item_url);
+        $img_content = ob_get_contents();
+        ob_end_clean();
+
+        $fo = fopen($wall_paper_folder . $formatted_name, 'a');
+        fwrite($fo, $img_content);
+        fclose($fo);
     }
-
-    ob_start();
-    readfile($item_url);
-    $img_content = ob_get_contents();
-    ob_end_clean();
-
-    $fo = fopen($wall_paper_folder . $formatted_name, 'a');
-    fwrite($fo, $img_content);
-    fclose($fo);
 }
 // 移动七天前图片
 foreach ($exist_images as $image_name) {
